@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Коран на табасаранском языке
 
-## Getting Started
+Статическое веб-приложение для отображения Корана с переводом на табасаранский язык.
 
-First, run the development server:
+## Технологии
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 16** - React фреймворк с SSR
+- **TypeScript** - типизация
+- **Tailwind CSS** - стилизация
+- **API Al-Quran Cloud** - получение данных о сурах
+
+## Структура проекта
+
+```
+site_statick/
+├── app/                    # Next.js App Router страницы
+│   ├── page.tsx           # Главная страница
+│   ├── surahs/            # Страницы сур
+│   └── layout.tsx         # Корневой layout
+├── components/            # React компоненты
+│   └── Quran/            # Компоненты для отображения Корана
+├── lib/                   # Утилиты и серверная логика
+│   ├── api/              # Клиент для внешнего API
+│   ├── quran/            # Логика объединения данных
+│   └── translations/     # Загрузка переводов
+├── types/                 # TypeScript типы
+├── data/                  # Статические данные
+│   └── translations/     # JSON файлы с переводами
+└── public/               # Публичные файлы
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Особенности
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **SSR (Server-Side Rendering)** - все страницы рендерятся на сервере для лучшего SEO
+- **Статические переводы** - переводы на табасаранском хранятся в JSON файлах
+- **Динамическое получение данных** - арабский текст, транслитерация и русский перевод получаются из внешнего API
+- **Оптимизация для поисковиков** - мета-теги и структурированные данные
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Установка и запуск
 
-## Learn More
+```bash
+# Установка зависимостей
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# Запуск в режиме разработки
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Сборка для production
+npm run build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Запуск production версии
+npm start
+```
 
-## Deploy on Vercel
+## Добавление переводов
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Переводы на табасаранском языке хранятся в папке `data/translations/` в формате JSON.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Формат файла: `sura_{номер}_tabasaran.json`
+
+Пример структуры:
+
+```json
+{
+  "suraNumber": 70,
+  "suraName": "Мягьражар",
+  "ayahs": [
+    {
+      "ayahNumber": 0,
+      "translation": "Бисмиллаhи-р-РахIмани-р-Рахим"
+    },
+    {
+      "ayahNumber": 1,
+      "translation": "Перевод первого аята..."
+    }
+  ]
+}
+```
+
+**Примечания:**
+- `ayahNumber: 0` используется для Бисмилляхи
+- `ayahNumber` соответствует номеру аята в суре (1, 2, 3, ...)
+- Если перевода для аята нет, он будет отображаться пустым
+
+## API
+
+Приложение использует внешний API [Al-Quran Cloud](https://alquran.cloud/api) для получения:
+- Арабского текста (quran-uthmani)
+- Транслитерации (en.transliteration)
+- Русского перевода (ru.kuliev)
+
+## Деплой
+
+Приложение готово к деплою на любую платформу, поддерживающую Next.js:
+- Vercel (рекомендуется)
+- Netlify
+- AWS Amplify
+- Любой хостинг с поддержкой Node.js
+
+## SEO
+
+Все страницы оптимизированы для поисковых систем:
+- Мета-теги для каждой страницы
+- Server-Side Rendering
+- Семантическая HTML разметка
+- Структурированные данные
