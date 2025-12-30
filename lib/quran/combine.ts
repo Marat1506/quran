@@ -55,7 +55,8 @@ export function combineSuraData(
   const bismillah = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
 
   // Добавляем Бисмилляхи как отдельный аят (номер 0), если есть перевод
-  if (tabasaranMap.has(0)) {
+  // Для суры 1 Бисмилляхи является первым аятом, поэтому не создаем нулевой аят
+  if (tabasaranMap.has(0) && mainSura.number !== 1) {
     const firstAyah = mainSura.ayahs[0];
     combinedAyahs.push({
       number: 0,
@@ -80,11 +81,12 @@ export function combineSuraData(
     const russianText = russianMap.get(ayah.numberInSurah) || '';
 
     // Если это первый аят и он содержит Бисмилляхи, удаляем её из начала арабского текста и транслитерации
+    // Для суры 1 Бисмилляхи является частью первого аята, поэтому не удаляем её
     let processedArabicText = arabicText;
     let processedTransliterationText = transliterationText;
     
-    if (ayah.numberInSurah === 1) {
-      // Бисмилляхи всегда в начале первого аята (кроме суры 9)
+    if (ayah.numberInSurah === 1 && mainSura.number !== 1 && mainSura.number !== 9) {
+      // Бисмилляхи всегда в начале первого аята (кроме суры 1 и суры 9)
       // Длина Бисмилляхи: 38 символов
       const bismillahLength = 38;
       const bismillahTransliteration = 'Bismillahir-Rahmanir-Rahim';
