@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAvailableTranslations } from "@/lib/translations/loader";
+import { getAvailableTranslations, loadTabasaranTranslation } from "@/lib/translations/loader";
 import { getSuraFromAPI } from "@/lib/api/quran";
 
 export const metadata = {
@@ -11,15 +11,17 @@ export default async function Home() {
   // Получаем список доступных переводов
   const availableSuras = await getAvailableTranslations();
 
-  // Для каждой суры получаем базовую информацию из API
+  // Для каждой суры получаем базовую информацию из API и перевод
   const surahsList = await Promise.all(
     availableSuras.map(async (suraNumber) => {
       try {
         const apiResponse = await getSuraFromAPI(suraNumber, ['quran-uthmani']);
         const sura = apiResponse.data[0];
+        const tabasaranTranslation = await loadTabasaranTranslation(suraNumber);
         return {
           number: sura.number,
           name: sura.name,
+          nameTabasaran: tabasaranTranslation?.suraName || '',
           englishName: sura.englishName,
           englishNameTranslation: sura.englishNameTranslation,
         };
@@ -60,6 +62,11 @@ export default async function Home() {
                 <h2 className="text-lg font-bold mb-1 text-black">
                   {surah.name}
                 </h2>
+                {surah.nameTabasaran && (
+                  <p className="text-sm text-gray-700 mt-1">
+                    {surah.nameTabasaran}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
