@@ -31,17 +31,19 @@ export async function GET() {
           fileSize: translation ? JSON.stringify(translation).length : 0
         };
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         results.loadTests[suraNum] = {
           success: false,
-          error: error.message,
+          error: errorMessage,
           loadTime: -1
         };
-        results.errors.push(`Sura ${suraNum}: ${error.message}`);
+        results.errors.push(`Sura ${suraNum}: ${errorMessage}`);
       }
     }
     
   } catch (error) {
-    results.errors.push(`General error: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    results.errors.push(`General error: ${errorMessage}`);
   }
 
   return NextResponse.json(results, { 
