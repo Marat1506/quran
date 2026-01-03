@@ -24,31 +24,18 @@ export function removeBismillahFromText(text: string): string {
   
   let cleanedText = text.trim();
   
-  // Извлекаем точный паттерн из реального текста API
-  // Ищем первое слово после Бисмиллях - "تَنزِيلُ"
-  const afterBismillahIndex = cleanedText.indexOf('تَنزِيلُ');
+  // Бисмиллях всегда имеет фиксированную длину - 38 символов
+  // "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ " (включая пробел в конце)
+  const bismillahLength = 38;
   
-  if (afterBismillahIndex > 0) {
-    // Если нашли "تَنزِيلُ", значит до него был Бисмиллях
-    cleanedText = cleanedText.substring(afterBismillahIndex).trim();
-    return cleanedText;
-  }
-  
-  // Альтернативный способ - ищем другие характерные слова после Бисмиллях
-  const commonWordsAfterBismillah = [
-    'تَنزِيلُ', // Сура 39
-    'حم',      // Суры начинающиеся с Хам
-    'الم',     // Суры начинающиеся с Алиф-лам-мим
-    'قُلْ',    // Суры начинающиеся с "Скажи"
-    'يَا',     // Суры начинающиеся с "О"
-    'إِذَا',   // Суры начинающиеся с "Когда"
-    'وَ',      // Суры начинающиеся с "И"
-  ];
-  
-  for (const word of commonWordsAfterBismillah) {
-    const wordIndex = cleanedText.indexOf(word);
-    if (wordIndex > 0) {
-      cleanedText = cleanedText.substring(wordIndex).trim();
+  // Если текст начинается с символов Бисмиллях, убираем их
+  if (cleanedText.length > bismillahLength) {
+    // Проверяем что текст действительно начинается с арабских символов Бисмиллях
+    const possibleBismillah = cleanedText.substring(0, bismillahLength).trim();
+    
+    // Если в начале есть арабские символы "بِسْمِ" (начало Бисмиллях)
+    if (possibleBismillah.startsWith('بِسْمِ')) {
+      cleanedText = cleanedText.substring(bismillahLength).trim();
       return cleanedText;
     }
   }
