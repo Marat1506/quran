@@ -14,7 +14,7 @@ export async function GET() {
     // Получаем список доступных переводов
     results.availableTranslations = await getAvailableTranslations();
     
-    // Тестируем загрузку каждой суры
+    // Тестируем загрузку каждой суры (только те, что реально есть)
     const testSuras = [1, 39, 40, 47, 70, 72, 76, 78, 89, 94, 99, 100, 111];
     
     for (const suraNum of testSuras) {

@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
   experimental: {
     // Улучшенная поддержка SSR
   },
+  
+  // Включаем файлы переводов в сборку
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Копируем файлы переводов в сборку
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
