@@ -55,9 +55,9 @@ export async function loadTabasaranTranslation(
     return translation;
   } catch (error) {
     console.error(`[Sura ${suraNumber}] Failed to load:`, {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : 'Unknown'
     });
     return null;
   }
@@ -94,7 +94,7 @@ export async function getAvailableTranslations(): Promise<number[]> {
     console.log('Missing sura 78?', !sorted.includes(78));
     return sorted;
   } catch (error) {
-    console.error('Failed to get available translations:', error);
+    console.error('Failed to get available translations:', error instanceof Error ? error.message : String(error));
     return [];
   }
 }
