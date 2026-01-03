@@ -5,9 +5,9 @@ export async function GET() {
   const results = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    availableTranslations: [],
-    loadTests: {},
-    errors: []
+    availableTranslations: [] as number[],
+    loadTests: {} as Record<number, any>,
+    errors: [] as string[]
   };
 
   try {
