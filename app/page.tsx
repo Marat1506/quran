@@ -12,25 +12,35 @@ export default async function Home() {
   const availableSuras = await getAvailableTranslations();
 
   // Для каждой суры получаем базовую информацию из API и перевод
-  const surahsList = await Promise.all(
+  // Используем Promise.allSettled вместо Promise.all, чтобы ошибка одной суры не блокировала остальные
+  const surahsListResults = await Promise.allSettled(
     availableSuras.map(async (suraNumber) => {
-      try {
-        const apiResponse = await getSuraFromAPI(suraNumber, ['quran-uthmani']);
-        const sura = apiResponse.data[0];
-        const tabasaranTranslation = await loadTabasaranTranslation(suraNumber);
-        return {
-          number: sura.number,
-          name: sura.name,
-          nameTabasaran: tabasaranTranslation?.suraName || '',
-          englishName: sura.englishName,
-          englishNameTranslation: sura.englishNameTranslation,
-        };
-      } catch (error) {
-        console.error(`Failed to fetch sura ${suraNumber}:`, error);
-        return null;
+      const apiResponse = await getSuraFromAPI(suraNumber, ['quran-uthmani']);
+      if (!apiResponse.data || apiResponse.data.length === 0) {
+        throw new Error(`No data received for sura ${suraNumber}`);
       }
+      const sura = apiResponse.data[0];
+      const tabasaranTranslation = await loadTabasaranTranslation(suraNumber);
+      return {
+        number: sura.number,
+        name: sura.name,
+        nameTabasaran: tabasaranTranslation?.suraName || '',
+        englishName: sura.englishName,
+        englishNameTranslation: sura.englishNameTranslation,
+      };
     })
   );
+
+  // Обрабатываем результаты и логируем ошибки
+  const surahsList = surahsListResults.map((result, index) => {
+    if (result.status === 'fulfilled') {
+      return result.value;
+    } else {
+      const suraNumber = availableSuras[index];
+      console.error(`Failed to fetch sura ${suraNumber}:`, result.reason);
+      return null;
+    }
+  });
 
   const validSurahs = surahsList.filter((s) => s !== null);
 

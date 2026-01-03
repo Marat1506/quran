@@ -39,6 +39,7 @@ export async function loadTabasaranTranslation(
 export async function getAvailableTranslations(): Promise<number[]> {
   try {
     if (!fs.existsSync(translationsDir)) {
+      console.error('Translations directory does not exist:', translationsDir);
       return [];
     }
 
@@ -52,7 +53,9 @@ export async function getAvailableTranslations(): Promise<number[]> {
       }
     }
 
-    return suraNumbers.sort((a, b) => a - b);
+    const sorted = suraNumbers.sort((a, b) => a - b);
+    console.log('Available translations found:', sorted.length, 'suras:', sorted);
+    return sorted;
   } catch (error) {
     console.error('Failed to get available translations:', error);
     return [];
