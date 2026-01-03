@@ -17,17 +17,48 @@ export async function loadTabasaranTranslation(
   try {
     const filePath = path.join(translationsDir, `sura_${suraNumber}_tabasaran.json`);
     
-    // Проверяем существование файла
-    if (!fs.existsSync(filePath)) {
+    console.log(`[Sura ${suraNumber}] Attempting to load from: ${filePath}`);
+    console.log(`[Sura ${suraNumber}] Working directory: ${process.cwd()}`);
+    console.log(`[Sura ${suraNumber}] Translations dir: ${translationsDir}`);
+    
+    // Проверяем существование директории
+    if (!fs.existsSync(translationsDir)) {
+      console.error(`[Sura ${suraNumber}] Translations directory does not exist: ${translationsDir}`);
       return null;
     }
 
+    // Проверяем существование файла
+    if (!fs.existsSync(filePath)) {
+      console.log(`[Sura ${suraNumber}] File not found: ${filePath}`);
+      
+      // Попробуем найти файл в директории
+      const files = fs.readdirSync(translationsDir);
+      const expectedFileName = `sura_${suraNumber}_tabasaran.json`;
+      const foundFile = files.find(f => f === expectedFileName);
+      
+      console.log(`[Sura ${suraNumber}] Looking for: ${expectedFileName}`);
+      console.log(`[Sura ${suraNumber}] Available files:`, files);
+      console.log(`[Sura ${suraNumber}] Found match: ${foundFile || 'none'}`);
+      
+      return null;
+    }
+
+    const stats = fs.statSync(filePath);
+    console.log(`[Sura ${suraNumber}] File size: ${stats.size} bytes`);
+
     const fileContent = fs.readFileSync(filePath, 'utf-8');
+    console.log(`[Sura ${suraNumber}] Content length: ${fileContent.length} chars`);
+    
     const translation: TabasaranTranslation = JSON.parse(fileContent);
     
+    console.log(`[Sura ${suraNumber}] Successfully parsed JSON, ayahs: ${translation.ayahs?.length || 0}`);
     return translation;
-  } catch {
-    // В production может быть ошибка, если файл не найден - это нормально
+  } catch (error) {
+    console.error(`[Sura ${suraNumber}] Failed to load:`, {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return null;
   }
 }
