@@ -13,10 +13,12 @@ export function AyahDisplay({
   showTransliteration = true, 
   showTabasaran = true 
 }: Props) {
+  const isBismillah = ayah.numberInSurah === 0;
+
   return (
     <div className="mb-4 p-3 border border-gray-200 rounded-lg shadow-sm">
-      {/* Номер аята */}
-      {ayah.numberInSurah !== 0 && (
+      {/* Номер аята (убираем заголовок для Бисмиллях) */}
+      {!isBismillah && (
         <div className="flex items-center mb-3">
           <span className="inline-block px-2 py-1 mr-2 text-xs font-semibold text-white bg-black rounded">
             {ayah.numberInSurah}

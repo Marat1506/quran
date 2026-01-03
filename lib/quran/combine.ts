@@ -3,6 +3,7 @@
 import { APIResponse } from '@/lib/api/quran';
 import { TabasaranTranslation, Surah, Ayah } from '@/types/surah';
 import { getStaticSuraInfo } from '@/lib/data/static-sura-info';
+import { shouldAddBismillah, removeBismillahFromText, removeBismillahFromTransliteration, removeBismillahFromRussian } from '@/lib/utils/bismillah';
 
 /**
  * Объединяет данные из API с переводом на табасаранском
@@ -28,16 +29,49 @@ export function combineSuraData(
   const russianSura = apiResponse.data.find(s => s.edition.identifier === 'ru.kuliev');
 
   // Создаем объединенные аяты
-  const combinedAyahs: Ayah[] = arabicSura.ayahs.map((arabicAyah) => {
+  const combinedAyahs: Ayah[] = [];
+
+  // Сначала добавляем нулевой аят (Бисмиллях) если он есть в табасаранском переводе
+  const bismillahAyah = tabasaranTranslation?.ayahs.find(a => a.ayahNumber === 0);
+  if (bismillahAyah && shouldAddBismillah(arabicSura.number)) {
+    combinedAyahs.push({
+      number: 0,
+      text_arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', // Бисмиллях на арабском
+      text_transliteration: 'Bismillahi-r-rahmani-r-raheem',
+      text_russian: 'Во имя Аллаха, Милостивого, Милосердного!',
+      text_tabasaran: bismillahAyah.translation,
+      numberInSurah: 0,
+      juz: 0,
+      manzil: 0,
+      page: 0,
+      ruku: 0,
+      hizbQuarter: 0,
+      sajda: false,
+    });
+  }
+
+  // Затем добавляем обычные аяты
+  arabicSura.ayahs.forEach((arabicAyah) => {
     const transliterationAyah = transliterationSura?.ayahs.find(a => a.numberInSurah === arabicAyah.numberInSurah);
     const russianAyah = russianSura?.ayahs.find(a => a.numberInSurah === arabicAyah.numberInSurah);
     const tabasaranAyah = tabasaranTranslation?.ayahs.find(a => a.ayahNumber === arabicAyah.numberInSurah);
 
-    return {
+    // Для первого аята убираем Бисмиллях если он есть (кроме сур 1 и 9)
+    let cleanArabicText = arabicAyah.text;
+    let cleanTransliterationText = transliterationAyah?.text || '';
+    let cleanRussianText = russianAyah?.text || '';
+
+    if (arabicAyah.numberInSurah === 1 && shouldAddBismillah(arabicSura.number)) {
+      cleanArabicText = removeBismillahFromText(arabicAyah.text);
+      cleanTransliterationText = removeBismillahFromTransliteration(transliterationAyah?.text || '');
+      cleanRussianText = removeBismillahFromRussian(russianAyah?.text || '');
+    }
+
+    combinedAyahs.push({
       number: arabicAyah.number,
-      text_arabic: arabicAyah.text,
-      text_transliteration: transliterationAyah?.text || '',
-      text_russian: russianAyah?.text || '',
+      text_arabic: cleanArabicText,
+      text_transliteration: cleanTransliterationText,
+      text_russian: cleanRussianText,
       text_tabasaran: tabasaranAyah?.translation || '',
       numberInSurah: arabicAyah.numberInSurah,
       juz: arabicAyah.juz,
@@ -46,7 +80,7 @@ export function combineSuraData(
       ruku: arabicAyah.ruku,
       hizbQuarter: arabicAyah.hizbQuarter,
       sajda: arabicAyah.sajda,
-    };
+    });
   });
 
   return {
@@ -75,20 +109,46 @@ export function createFallbackSura(
   }
 
   // Создаем аяты только с табасаранским переводом
-  const ayahs: Ayah[] = tabasaranTranslation.ayahs.map((tabasaranAyah) => ({
-    number: tabasaranAyah.ayahNumber,
-    text_arabic: '', // Арабский текст недоступен
-    text_transliteration: '', // Транслитерация недоступна
-    text_russian: '', // Русский перевод недоступен
-    text_tabasaran: tabasaranAyah.translation,
-    numberInSurah: tabasaranAyah.ayahNumber,
-    juz: 0,
-    manzil: 0,
-    page: 0,
-    ruku: 0,
-    hizbQuarter: 0,
-    sajda: false,
-  }));
+  const ayahs: Ayah[] = [];
+
+  // Добавляем Бисмиллях если есть (кроме первой и девятой суры)
+  const bismillahAyah = tabasaranTranslation.ayahs.find(a => a.ayahNumber === 0);
+  if (bismillahAyah && shouldAddBismillah(suraNumber)) {
+    ayahs.push({
+      number: 0,
+      text_arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      text_transliteration: 'Bismillahi-r-rahmani-r-raheem',
+      text_russian: 'Во имя Аллаха, Милостивого, Милосердного!',
+      text_tabasaran: bismillahAyah.translation,
+      numberInSurah: 0,
+      juz: 0,
+      manzil: 0,
+      page: 0,
+      ruku: 0,
+      hizbQuarter: 0,
+      sajda: false,
+    });
+  }
+
+  // Добавляем остальные аяты
+  tabasaranTranslation.ayahs
+    .filter(a => a.ayahNumber > 0) // Исключаем нулевой аят, он уже добавлен выше
+    .forEach((tabasaranAyah) => {
+      ayahs.push({
+        number: tabasaranAyah.ayahNumber,
+        text_arabic: '', // Арабский текст недоступен
+        text_transliteration: '', // Транслитерация недоступна
+        text_russian: '', // Русский перевод недоступен
+        text_tabasaran: tabasaranAyah.translation,
+        numberInSurah: tabasaranAyah.ayahNumber,
+        juz: 0,
+        manzil: 0,
+        page: 0,
+        ruku: 0,
+        hizbQuarter: 0,
+        sajda: false,
+      });
+    });
 
   return {
     number: staticInfo.number,
