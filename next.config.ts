@@ -12,17 +12,8 @@ const nextConfig: NextConfig = {
     // Улучшенная поддержка SSR
   },
   
-  // Включаем файлы переводов в сборку
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Копируем файлы переводов в сборку
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
-    }
-    return config;
-  },
+  // Пустая конфигурация Turbopack для совместимости с Next.js 16
+  turbopack: {},
 };
 
 export default nextConfig;
