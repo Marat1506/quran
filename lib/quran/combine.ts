@@ -136,7 +136,7 @@ export function createFallbackSura(
     .forEach((tabasaranAyah) => {
       ayahs.push({
         number: tabasaranAyah.ayahNumber,
-        text_arabic: '', // Арабский текст недоступен
+        text_arabic: '[Арабский текст недоступен]', // Простой текст без Бисмиллях
         text_transliteration: '', // Транслитерация недоступна
         text_russian: '', // Русский перевод недоступен
         text_tabasaran: tabasaranAyah.translation,

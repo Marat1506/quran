@@ -24,18 +24,33 @@ export function removeBismillahFromText(text: string): string {
   
   let cleanedText = text.trim();
   
-  // Бисмиллях всегда имеет фиксированную длину - 38 символов
-  // "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ " (включая пробел в конце)
-  const bismillahLength = 38;
+  // Проверяем все возможные варианты Бисмиллях
+  for (const pattern of BISMILLAH_PATTERNS) {
+    if (cleanedText.startsWith(pattern)) {
+      // Убираем Бисмиллях и возможные пробелы после него
+      cleanedText = cleanedText.substring(pattern.length).trim();
+      return cleanedText;
+    }
+  }
   
-  // Если текст начинается с символов Бисмиллях, убираем их
-  if (cleanedText.length > bismillahLength) {
-    // Проверяем что текст действительно начинается с арабских символов Бисмиллях
-    const possibleBismillah = cleanedText.substring(0, bismillahLength).trim();
+  // Если точное совпадение не найдено, используем более гибкий подход
+  // Бисмиллях всегда начинается с "بِسْمِ" и имеет примерно 38-40 символов
+  if (cleanedText.startsWith('بِسْمِ')) {
+    // Ищем конец Бисмиллях - он заканчивается на "الرَّحِيمِ" или "ٱلرَّحِيمِ"
+    const endPatterns = ['الرَّحِيمِ', 'ٱلرَّحِيمِ', 'الرحيم'];
     
-    // Если в начале есть арабские символы "بِسْمِ" (начало Бисмиллях)
-    if (possibleBismillah.startsWith('بِسْمِ')) {
-      cleanedText = cleanedText.substring(bismillahLength).trim();
+    for (const endPattern of endPatterns) {
+      const endIndex = cleanedText.indexOf(endPattern);
+      if (endIndex > 0) {
+        // Убираем Бисмиллях включая найденное окончание
+        cleanedText = cleanedText.substring(endIndex + endPattern.length).trim();
+        return cleanedText;
+      }
+    }
+    
+    // Если не нашли окончание, используем фиксированную длину (38 символов)
+    if (cleanedText.length > 38) {
+      cleanedText = cleanedText.substring(38).trim();
       return cleanedText;
     }
   }
