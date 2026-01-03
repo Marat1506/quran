@@ -11,10 +11,15 @@ interface Props {
 // Генерируем статические пути для всех доступных сур
 export async function generateStaticParams() {
   const availableSuras = getAvailableSuras();
+  console.log('generateStaticParams: Available suras:', availableSuras);
+  console.log('generateStaticParams: Includes sura 111?', availableSuras.includes(111));
   
-  return availableSuras.map((suraNumber) => ({
+  const params = availableSuras.map((suraNumber) => ({
     id: suraNumber.toString(),
   }));
+  
+  console.log('generateStaticParams: Generated params:', params.map(p => p.id));
+  return params;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -46,14 +51,19 @@ export default async function SurahPage({ params }: Props) {
 
   // Валидация номера суры
   if (isNaN(surahId) || surahId < 1 || surahId > 114) {
+    console.error(`Invalid sura ID: ${id}`);
     notFound();
   }
 
   let surah;
   try {
+    console.log(`Loading sura ${surahId}...`);
     surah = await getSurah(surahId);
+    console.log(`Successfully loaded sura ${surahId}`);
   } catch (error) {
     console.error(`Failed to load sura ${surahId}:`, error);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     notFound();
   }
 

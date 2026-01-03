@@ -56,20 +56,34 @@ export async function getSuraFromAPI(
 
   const editionsStr = editions.join(',');
   const url = `${API_BASE_URL}/surah/${number}/editions/${editionsStr}`;
+  
+  console.log(`Fetching from API: ${url}`);
 
   try {
     const response = await fetch(url, {
       next: { revalidate: 3600 }, // Кешируем на 1 час
     });
 
+    console.log(`API response status for sura ${number}: ${response.status}`);
+
     if (!response.ok) {
-      throw new Error(`API returned status ${response.status}`);
+      const errorText = await response.text();
+      console.error(`API error for sura ${number}: Status ${response.status}, Body: ${errorText}`);
+      throw new Error(`API returned status ${response.status}: ${errorText}`);
     }
 
     const data: APIResponse = await response.json();
+    console.log(`API success for sura ${number}: received ${data?.data?.length || 0} editions`);
+    
+    if (!data || !data.data || data.data.length === 0) {
+      console.error(`API returned empty data for sura ${number}`);
+      throw new Error(`API returned empty data for sura ${number}`);
+    }
+    
     return data;
   } catch (error) {
     console.error(`Failed to fetch sura ${number} from API:`, error);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
     throw error;
   }
 }
