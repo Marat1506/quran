@@ -1,143 +1,103 @@
-// Функции для объединения данных из API с переводами на табасаранском
+// Функции для объединения данных из API и переводов
 
-import { Surah, Ayah } from '@/types/surah';
-import { APIResponse, SuraAPI, AyahAPI } from '@/lib/api/quran';
-import { TabasaranTranslation } from '@/types/surah';
+import { APIResponse } from '@/lib/api/quran';
+import { TabasaranTranslation, Surah, Ayah } from '@/types/surah';
+import { getStaticSuraInfo } from '@/lib/data/static-sura-info';
 
 /**
- * Объединяет данные из API с переводами на табасаранском
+ * Объединяет данные из API с переводом на табасаранском
  */
 export function combineSuraData(
   apiResponse: APIResponse,
   tabasaranTranslation: TabasaranTranslation | null
 ): Surah {
-  if (apiResponse.data.length === 0) {
-    throw new Error('No data received from API');
+  if (!apiResponse.data || apiResponse.data.length === 0) {
+    throw new Error('No API data provided');
   }
 
-  // Берем первую суру из API (она содержит основную информацию)
-  const mainSura = apiResponse.data[0];
-
-  // Создаем карты для разных изданий
-  const arabicMap = new Map<number, string>();
-  const transliterationMap = new Map<number, string>();
-  const russianMap = new Map<number, string>();
-
-  // Заполняем карты данными из API
-  for (const sura of apiResponse.data) {
-    for (const ayah of sura.ayahs) {
-      switch (sura.edition.identifier) {
-        case 'quran-uthmani':
-          arabicMap.set(ayah.numberInSurah, ayah.text);
-          break;
-        case 'en.transliteration':
-          transliterationMap.set(ayah.numberInSurah, ayah.text);
-          break;
-        case 'ru.kuliev':
-          russianMap.set(ayah.numberInSurah, ayah.text);
-          break;
-      }
-    }
+  // Берем первую суру из ответа (арабский текст)
+  const arabicSura = apiResponse.data.find(s => s.edition.identifier === 'quran-uthmani');
+  if (!arabicSura) {
+    throw new Error('Arabic text not found in API response');
   }
 
-  // Создаем карту переводов на табасаранском
-  const tabasaranMap = new Map<number, string>();
-  if (tabasaranTranslation) {
-    for (const ayahTranslation of tabasaranTranslation.ayahs) {
-      tabasaranMap.set(ayahTranslation.ayahNumber, ayahTranslation.translation);
-    }
-  }
+  // Ищем транслитерацию
+  const transliterationSura = apiResponse.data.find(s => s.edition.identifier === 'en.transliteration');
+  
+  // Ищем русский перевод
+  const russianSura = apiResponse.data.find(s => s.edition.identifier === 'ru.kuliev');
 
   // Создаем объединенные аяты
-  const combinedAyahs: Ayah[] = [];
+  const combinedAyahs: Ayah[] = arabicSura.ayahs.map((arabicAyah) => {
+    const transliterationAyah = transliterationSura?.ayahs.find(a => a.numberInSurah === arabicAyah.numberInSurah);
+    const russianAyah = russianSura?.ayahs.find(a => a.numberInSurah === arabicAyah.numberInSurah);
+    const tabasaranAyah = tabasaranTranslation?.ayahs.find(a => a.ayahNumber === arabicAyah.numberInSurah);
 
-  // Константа для Бисмилляхи
-  const bismillah = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
-
-  // Добавляем Бисмилляхи как отдельный аят (номер 0), если есть перевод
-  // Для суры 1 Бисмилляхи является первым аятом, поэтому не создаем нулевой аят
-  if (tabasaranMap.has(0) && mainSura.number !== 1) {
-    const firstAyah = mainSura.ayahs[0];
-    combinedAyahs.push({
-      number: 0,
-      text_arabic: bismillah,
-      text_transliteration: 'Bismillahir-Rahmanir-Rahim',
-      text_russian: 'Во имя Аллаха, Милостивого, Милосердного!',
-      text_tabasaran: tabasaranMap.get(0) || '',
-      numberInSurah: 0,
-      juz: firstAyah.juz,
-      manzil: firstAyah.manzil,
-      page: firstAyah.page,
-      ruku: firstAyah.ruku,
-      hizbQuarter: firstAyah.hizbQuarter,
-      sajda: false,
-    });
-  }
-
-  // Обрабатываем остальные аяты
-  for (const ayah of mainSura.ayahs) {
-    const arabicText = arabicMap.get(ayah.numberInSurah) || '';
-    const transliterationText = transliterationMap.get(ayah.numberInSurah) || '';
-    const russianText = russianMap.get(ayah.numberInSurah) || '';
-
-    // Если это первый аят и он содержит Бисмилляхи, удаляем её из начала арабского текста и транслитерации
-    // Для суры 1 Бисмилляхи является частью первого аята, поэтому не удаляем её
-    let processedArabicText = arabicText;
-    let processedTransliterationText = transliterationText;
-    
-    if (ayah.numberInSurah === 1 && mainSura.number !== 1 && mainSura.number !== 9) {
-      // Бисмилляхи всегда в начале первого аята (кроме суры 1 и суры 9)
-      // Длина Бисмилляхи: 38 символов
-      const bismillahLength = 38;
-      const bismillahTransliteration = 'Bismillahir-Rahmanir-Rahim';
-      const bismillahTransliterationLength = bismillahTransliteration.length;
-      
-      // Удаляем первые 38 символов (Бисмилляхи) с начала арабского текста
-      const trimmedArabic = arabicText.trim();
-      if (trimmedArabic.length > bismillahLength) {
-        // Удаляем Бисмилляхи и пробелы после неё
-        processedArabicText = trimmedArabic.substring(bismillahLength).trim();
-      }
-      
-      // Удаляем Бисмилляхи из начала транслитерации
-      const trimmedTransliteration = transliterationText.trim();
-      if (trimmedTransliteration.length > bismillahTransliterationLength) {
-        // Проверяем, что начинается с Бисмилляхи
-        if (trimmedTransliteration.startsWith(bismillahTransliteration)) {
-          processedTransliterationText = trimmedTransliteration
-            .substring(bismillahTransliterationLength)
-            .trim()
-            .replace(/^\s*-\s*/, '') // Убираем дефис в начале, если остался
-            .trim();
-        }
-      }
-    }
-
-    combinedAyahs.push({
-      number: ayah.number,
-      text_arabic: processedArabicText,
-      text_transliteration: processedTransliterationText,
-      text_russian: russianText,
-      text_tabasaran: tabasaranMap.get(ayah.numberInSurah) || '',
-      numberInSurah: ayah.numberInSurah,
-      juz: ayah.juz,
-      manzil: ayah.manzil,
-      page: ayah.page,
-      ruku: ayah.ruku,
-      hizbQuarter: ayah.hizbQuarter,
-      sajda: ayah.sajda,
-    });
-  }
+    return {
+      number: arabicAyah.number,
+      text_arabic: arabicAyah.text,
+      text_transliteration: transliterationAyah?.text || '',
+      text_russian: russianAyah?.text || '',
+      text_tabasaran: tabasaranAyah?.translation || '',
+      numberInSurah: arabicAyah.numberInSurah,
+      juz: arabicAyah.juz,
+      manzil: arabicAyah.manzil,
+      page: arabicAyah.page,
+      ruku: arabicAyah.ruku,
+      hizbQuarter: arabicAyah.hizbQuarter,
+      sajda: arabicAyah.sajda,
+    };
+  });
 
   return {
-    number: mainSura.number,
-    name: mainSura.name,
+    number: arabicSura.number,
+    name: arabicSura.name,
     name_tabasaran: tabasaranTranslation?.suraName || '',
-    englishName: mainSura.englishName,
-    englishNameTranslation: mainSura.englishNameTranslation,
-    revelationType: mainSura.revelationType,
-    numberOfAyahs: mainSura.numberOfAyahs,
+    englishName: arabicSura.englishName,
+    englishNameTranslation: arabicSura.englishNameTranslation,
+    revelationType: arabicSura.revelationType,
+    numberOfAyahs: arabicSura.numberOfAyahs,
     ayahs: combinedAyahs,
   };
 }
 
+/**
+ * Создает суру используя только статические данные и табасаранский перевод
+ * Используется как fallback когда API недоступен
+ */
+export function createFallbackSura(
+  suraNumber: number,
+  tabasaranTranslation: TabasaranTranslation
+): Surah {
+  const staticInfo = getStaticSuraInfo(suraNumber);
+  if (!staticInfo) {
+    throw new Error(`No static info available for sura ${suraNumber}`);
+  }
+
+  // Создаем аяты только с табасаранским переводом
+  const ayahs: Ayah[] = tabasaranTranslation.ayahs.map((tabasaranAyah) => ({
+    number: tabasaranAyah.ayahNumber,
+    text_arabic: '', // Арабский текст недоступен
+    text_transliteration: '', // Транслитерация недоступна
+    text_russian: '', // Русский перевод недоступен
+    text_tabasaran: tabasaranAyah.translation,
+    numberInSurah: tabasaranAyah.ayahNumber,
+    juz: 0,
+    manzil: 0,
+    page: 0,
+    ruku: 0,
+    hizbQuarter: 0,
+    sajda: false,
+  }));
+
+  return {
+    number: staticInfo.number,
+    name: staticInfo.name,
+    name_tabasaran: tabasaranTranslation.suraName,
+    englishName: staticInfo.englishName,
+    englishNameTranslation: staticInfo.englishNameTranslation,
+    revelationType: staticInfo.revelationType,
+    numberOfAyahs: staticInfo.numberOfAyahs,
+    ayahs: ayahs,
+  };
+}

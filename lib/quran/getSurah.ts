@@ -2,8 +2,9 @@
 
 import { getSuraFromAPI } from '@/lib/api/quran';
 import { loadTabasaranTranslation } from '@/lib/translations/loader';
-import { combineSuraData } from '@/lib/quran/combine';
+import { combineSuraData, createFallbackSura } from '@/lib/quran/combine';
 import { Surah } from '@/types/surah';
+import { getAvailableSuras, isSuraAvailable } from '@/lib/translations/available-suras';
 
 /**
  * Получает суру с объединенными данными из API и переводов
@@ -11,25 +12,27 @@ import { Surah } from '@/types/surah';
  */
 export async function getSurah(number: number): Promise<Surah> {
   try {
-    // Список доступных сур
-    const availableSuras = [1, 39, 40, 47, 70, 72, 76, 78, 89, 94, 99, 100, 111];
-    
-    if (!availableSuras.includes(number)) {
+    // Проверяем доступность суры
+    if (!isSuraAvailable(number)) {
       throw new Error(`Sura ${number} is not available in Tabasaran translation yet`);
     }
-
-    // Получаем данные из API
-    const apiResponse = await getSuraFromAPI(number);
 
     // Загружаем перевод на табасаранском
     const tabasaranTranslation = await loadTabasaranTranslation(number);
 
     if (!tabasaranTranslation) {
-      console.warn(`No Tabasaran translation found for sura ${number}, using API data only`);
+      throw new Error(`No Tabasaran translation found for sura ${number}`);
     }
 
-    // Объединяем данные
-    return combineSuraData(apiResponse, tabasaranTranslation);
+    // Пытаемся получить данные из API
+    try {
+      const apiResponse = await getSuraFromAPI(number);
+      return combineSuraData(apiResponse, tabasaranTranslation);
+    } catch (apiError) {
+      console.warn(`API failed for sura ${number}, using fallback data:`, apiError);
+      // Используем fallback данные если API недоступен
+      return createFallbackSura(number, tabasaranTranslation);
+    }
   } catch (error) {
     console.error(`Failed to load sura ${number}:`, error);
     throw error;
@@ -41,12 +44,12 @@ export async function getSurah(number: number): Promise<Surah> {
  * Получает список доступных сур с табасаранским переводом
  */
 export function getAvailableSuraNumbers(): number[] {
-  return [1, 39, 40, 47, 70, 72, 76, 78, 89, 94, 99, 100, 111];
+  return getAvailableSuras();
 }
 
 /**
  * Проверяет, доступна ли сура с табасаранским переводом
  */
-export function isSuraAvailable(number: number): boolean {
-  return getAvailableSuraNumbers().includes(number);
+export function isSuraAvailableForTranslation(number: number): boolean {
+  return isSuraAvailable(number);
 }

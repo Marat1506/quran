@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { getAvailableTranslations, loadTabasaranTranslation } from "@/lib/translations/loader";
-import { getSuraFromAPI } from "@/lib/api/quran";
+import { loadTabasaranTranslation } from "@/lib/translations/loader";
+import { getAvailableSuras } from "@/lib/translations/available-suras";
+import { getStaticSuraInfo } from "@/lib/data/static-sura-info";
 
 export const metadata = {
   title: "Суры Корана - Коран на табасаранском",
@@ -8,25 +9,25 @@ export const metadata = {
 };
 
 export default async function Home() {
-  // Получаем список доступных переводов
-  const availableSuras = await getAvailableTranslations();
+  // Получаем список доступных переводов из статического списка
+  const availableSuras = getAvailableSuras();
 
-  // Для каждой суры получаем базовую информацию из API и перевод
+  // Для каждой суры получаем базовую информацию из статических данных и перевод
   // Используем Promise.allSettled вместо Promise.all, чтобы ошибка одной суры не блокировала остальные
   const surahsListResults = await Promise.allSettled(
     availableSuras.map(async (suraNumber) => {
-      const apiResponse = await getSuraFromAPI(suraNumber, ['quran-uthmani']);
-      if (!apiResponse.data || apiResponse.data.length === 0) {
-        throw new Error(`No data received for sura ${suraNumber}`);
+      const staticInfo = getStaticSuraInfo(suraNumber);
+      if (!staticInfo) {
+        throw new Error(`No static info for sura ${suraNumber}`);
       }
-      const sura = apiResponse.data[0];
+      
       const tabasaranTranslation = await loadTabasaranTranslation(suraNumber);
       return {
-        number: sura.number,
-        name: sura.name,
+        number: staticInfo.number,
+        name: staticInfo.name,
         nameTabasaran: tabasaranTranslation?.suraName || '',
-        englishName: sura.englishName,
-        englishNameTranslation: sura.englishNameTranslation,
+        englishName: staticInfo.englishName,
+        englishNameTranslation: staticInfo.englishNameTranslation,
       };
     })
   );

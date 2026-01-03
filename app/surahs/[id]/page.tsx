@@ -2,9 +2,19 @@ import { notFound } from 'next/navigation';
 import { getSurah } from '@/lib/quran/getSurah';
 import { SurahContent } from '@/components/Quran/SurahContent';
 import { Metadata } from 'next';
+import { getAvailableSuras } from '@/lib/translations/available-suras';
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+// Генерируем статические пути для всех доступных сур
+export async function generateStaticParams() {
+  const availableSuras = getAvailableSuras();
+  
+  return availableSuras.map((suraNumber) => ({
+    id: suraNumber.toString(),
+  }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loadTabasaranTranslation, getAvailableTranslations } from '@/lib/translations/loader';
+import { getAvailableSuras } from '@/lib/translations/available-suras';
 
 export async function GET() {
   const results = {
@@ -11,11 +12,20 @@ export async function GET() {
   };
 
   try {
-    // Получаем список доступных переводов
-    results.availableTranslations = await getAvailableTranslations();
+    // Получаем список доступных переводов из статического списка и из файловой системы
+    const staticSuras = getAvailableSuras();
+    let dynamicSuras: number[] = [];
     
-    // Тестируем загрузку каждой суры (только те, что реально есть)
-    const testSuras = [1, 39, 40, 47, 70, 72, 76, 78, 89, 94, 99, 100, 111];
+    try {
+      dynamicSuras = await getAvailableTranslations();
+    } catch (error) {
+      console.warn('Failed to get dynamic translations list:', error);
+    }
+    
+    results.availableTranslations = staticSuras;
+    
+    // Тестируем загрузку каждой суры из статического списка
+    const testSuras = staticSuras;
     
     for (const suraNum of testSuras) {
       try {
