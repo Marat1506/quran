@@ -4,12 +4,14 @@ import { Ayah } from '@/types/surah';
 
 interface Props {
   ayah: Ayah;
+  suraNumber: number;
   showTransliteration?: boolean;
   showTabasaran?: boolean;
 }
 
 export function AyahDisplay({ 
   ayah, 
+  suraNumber,
   showTransliteration = true, 
   showTabasaran = true 
 }: Props) {
@@ -20,11 +22,8 @@ export function AyahDisplay({
       {/* Номер аята (убираем заголовок для Бисмиллях) */}
       {!isBismillah && (
         <div className="flex items-center mb-3">
-          <span className="inline-block px-2 py-1 mr-2 text-xs font-semibold text-white bg-black rounded">
-            {ayah.numberInSurah}
-          </span>
-          <span className="text-xs text-gray-600">
-            Аят {ayah.numberInSurah}
+          <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-black rounded">
+            {suraNumber}:{ayah.numberInSurah}
           </span>
         </div>
       )}

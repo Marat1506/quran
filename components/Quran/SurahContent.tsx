@@ -64,6 +64,7 @@ export function SurahContent({ surah }: { surah: Surah }) {
             <AyahDisplay
               key={ayah.number}
               ayah={ayah}
+              suraNumber={surah.number}
               showTransliteration={showTransliteration}
               showTabasaran={showTabasaran}
             />
