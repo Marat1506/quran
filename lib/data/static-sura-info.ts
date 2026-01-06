@@ -50,6 +50,14 @@ export const STATIC_SURA_INFO: Record<number, StaticSuraInfo> = {
     revelationType: "Meccan",
     numberOfAyahs: 30
   },
+  69: {
+    number: 69,
+    name: "الحاقة",
+    englishName: "Al-Haaqqa",
+    englishNameTranslation: "The Reality",
+    revelationType: "Meccan",
+    numberOfAyahs: 52
+  },
   70: {
     number: 70,
     name: "المعارج",
