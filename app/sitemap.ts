@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://quran-bice-ten.vercel.app'
+  const baseUrl = 'https://www.qurantabasaran.ru'
   
   // Список доступных сур
   const availableSurahs = [40, 47, 70, 72, 78]
