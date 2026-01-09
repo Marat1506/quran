@@ -2,7 +2,7 @@
 // Этот список нужно обновлять при добавлении новых переводов
 
 export const AVAILABLE_SURAS = [
-//  40
+  1, 40, 47, 67, 69, 70, 71, 72, 76, 78, 89, 94, 99, 100, 106, 111
 ] as const;
 
 export type AvailableSuraNumber = typeof AVAILABLE_SURAS[number];

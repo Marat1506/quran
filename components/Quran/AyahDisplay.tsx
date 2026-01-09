@@ -22,7 +22,7 @@ export function AyahDisplay({
       {/* Номер аята (убираем заголовок для Бисмиллях) */}
       {!isBismillah && (
         <div className="flex items-center mb-3">
-          <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-black rounded">
+          <span className="text-sm text-gray-600 font-medium">
             {suraNumber}:{ayah.numberInSurah}
           </span>
         </div>
@@ -52,7 +52,7 @@ export function AyahDisplay({
       {showTabasaran && ayah.text_tabasaran && (
         <div className="mt-3">
           <p className="text-xs text-gray-500 italic mb-1">
-            Альберт Гаджикаибов
+            Альберт Гьяжикъаибов
           </p>
           <div className="p-3 bg-gray-50 rounded-lg border-l-4 border-black">
             <p className="text-base leading-relaxed text-gray-900 font-medium">
