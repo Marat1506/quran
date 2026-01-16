@@ -12,7 +12,7 @@ interface Props {
 export function AyahDisplay({ 
   ayah, 
   suraNumber,
-  showTransliteration = true, 
+  // showTransliteration = true, 
   showTabasaran = true 
 }: Props) {
   const isBismillah = ayah.numberInSurah === 0;
@@ -40,13 +40,13 @@ export function AyahDisplay({
       </div>
 
       {/* Транслитерация */}
-      {showTransliteration && ayah.text_transliteration && (
+      {/* {showTransliteration && ayah.text_transliteration && (
         <div className="mb-2">
           <p className="text-base italic text-gray-600 leading-relaxed">
             {ayah.text_transliteration}
           </p>
         </div>
-      )}
+      )} */}
 
       {/* Перевод на табасаранский */}
       {showTabasaran && ayah.text_tabasaran && (

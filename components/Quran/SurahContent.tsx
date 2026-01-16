@@ -46,7 +46,7 @@ export function SurahContent({ surah }: { surah: Surah }) {
         </div>
 
         {/* Переключатель транслитерации */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg flex flex-wrap gap-4 items-center">
+        {/* <div className="mb-6 p-4 bg-gray-50 rounded-lg flex flex-wrap gap-4 items-center">
           <label className="flex items-center cursor-pointer">
             <input
               type="checkbox"
@@ -56,7 +56,7 @@ export function SurahContent({ surah }: { surah: Surah }) {
             />
             <span className="text-sm font-medium">Транслитерация</span>
           </label>
-        </div>
+        </div> */}
 
         {/* Аяты */}
         <div>
@@ -65,7 +65,7 @@ export function SurahContent({ surah }: { surah: Surah }) {
               key={ayah.number}
               ayah={ayah}
               suraNumber={surah.number}
-              showTransliteration={showTransliteration}
+              // showTransliteration={showTransliteration}
               showTabasaran={showTabasaran}
             />
           ))}
