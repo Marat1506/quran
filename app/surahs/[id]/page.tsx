@@ -8,39 +8,58 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+// Разрешаем динамические параметры для сур, которые могут быть добавлены позже
+export const dynamicParams = true;
+
 // Генерируем статические пути для всех доступных сур
 export async function generateStaticParams() {
-  const availableSuras = getAvailableSuras();
-  console.log('generateStaticParams: Available suras:', availableSuras);
-  console.log('generateStaticParams: Includes sura 111?', availableSuras.includes(111));
-  
-  const params = availableSuras.map((suraNumber) => ({
-    id: suraNumber.toString(),
-  }));
-  
-  console.log('generateStaticParams: Generated params:', params.map(p => p.id));
-  return params;
+  try {
+    const availableSuras = getAvailableSuras();
+    console.log('generateStaticParams: Available suras:', availableSuras);
+    console.log('generateStaticParams: Total count:', availableSuras.length);
+    
+    const params = availableSuras.map((suraNumber) => ({
+      id: suraNumber.toString(),
+    }));
+    
+    console.log('generateStaticParams: Generated params:', params.map(p => p.id));
+    return params;
+  } catch (error) {
+    console.error('generateStaticParams: Error generating params:', error);
+    // Возвращаем пустой массив в случае ошибки, чтобы не сломать билд
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const surahId = parseInt(id);
-
-  if (isNaN(surahId) || surahId < 1 || surahId > 114) {
-    return {
-      title: 'Сура не найдена',
-    };
-  }
-
   try {
-    const surah = await getSurah(surahId);
-    return {
-      title: `Сура ${surah.number} - ${surah.name} | Коран на табасаранском`,
-      description: `Сура ${surah.number} "${surah.name}" с переводом на табасаранский язык. ${surah.numberOfAyahs} аятов.`,
-    };
+    const { id } = await params;
+    const surahId = parseInt(id);
+
+    if (isNaN(surahId) || surahId < 1 || surahId > 114) {
+      return {
+        title: 'Сура не найдена',
+      };
+    }
+
+    try {
+      const surah = await getSurah(surahId);
+      return {
+        title: `Сура ${surah.number} - ${surah.name} | Коран на табасаранском`,
+        description: `Сура ${surah.number} "${surah.name}" с переводом на табасаранский язык. ${surah.numberOfAyahs} аятов.`,
+      };
+    } catch (error) {
+      console.error(`generateMetadata: Failed to load sura ${surahId}:`, error);
+      return {
+        title: `Сура ${surahId} | Коран на табасаранском`,
+        description: `Сура ${surahId} с переводом на табасаранский язык.`,
+      };
+    }
   } catch (error) {
+    console.error('generateMetadata: Unexpected error:', error);
     return {
-      title: 'Ошибка загрузки суры',
+      title: 'Коран на табасаранском',
+      description: 'Коран с переводом на табасаранский язык',
     };
   }
 }
