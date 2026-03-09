@@ -9,6 +9,7 @@ interface Props {
   showTabasaran?: boolean;
 }
 
+
 export function AyahDisplay({ 
   ayah, 
   suraNumber,
