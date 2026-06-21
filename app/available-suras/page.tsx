@@ -8,6 +8,7 @@ export default function AvailableSurasPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Доступные суры с табасаранским переводом</h1>
       
+      
       <div className="mb-4">
         <p className="text-gray-600">
           Всего доступно: <strong>{availableSuras.length}</strong> из 114 сур
