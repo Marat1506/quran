@@ -59,6 +59,9 @@ export async function getSuraFromAPI(
   
   console.log(`Fetching from API: ${url}`);
 
+  // Добавляем задержку 500ms между запросами чтобы не превысить rate limit API
+  await new Promise(resolve => setTimeout(resolve, 500));
+
   try {
     const response = await fetch(url, {
       next: { revalidate: 3600 }, // Кешируем на 1 час
