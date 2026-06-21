@@ -8,8 +8,8 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-// Разрешаем динамические параметры для сур, которые могут быть добавлены позже
-export const dynamicParams = true;
+// Генерируем только статические страницы для быстрой загрузки
+export const dynamicParams = false;
 
 // Генерируем статические пути для всех доступных сур
 export async function generateStaticParams() {
