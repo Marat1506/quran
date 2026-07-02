@@ -31,6 +31,9 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Build static site
+        env:
+          # Нужен для marat1506.github.io/quran/. Удалите эту строку после подключения qurantabasaran.ru
+          NEXT_BASE_PATH: /quran
         run: npm run build
 
       - name: Upload artifact
