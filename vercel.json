@@ -1,8 +1,0 @@
-{
-  "functions": {
-    "app/api/debug-suras/route.ts": {
-      "includeFiles": "data/translations/**"
-    }
-  },
-  "buildCommand": "npm run build"
-}

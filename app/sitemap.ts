@@ -1,10 +1,11 @@
 import { MetadataRoute } from 'next'
+import { getAvailableSuras } from '@/lib/translations/available-suras'
+
+export const dynamic = 'force-static'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://www.qurantabasaran.ru'
-  
-  // Список доступных сур
-  const availableSurahs = [40, 47, 70, 72, 78]
+  const baseUrl = 'https://qurantabasaran.ru'
+  const availableSurahs = getAvailableSuras()
   
   const surahPages = availableSurahs.map((id) => ({
     url: `${baseUrl}/surahs/${id}`,
@@ -19,12 +20,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 1,
-    },
-    {
-      url: `${baseUrl}/surahs`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
     },
     ...surahPages,
   ]

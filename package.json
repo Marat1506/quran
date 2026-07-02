@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cache-api": "node scripts/cache-quran-api.mjs"
   },
   "dependencies": {
     "next": "16.1.1",

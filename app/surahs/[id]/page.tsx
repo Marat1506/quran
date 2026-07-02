@@ -3,6 +3,8 @@ import { getSurah } from '@/lib/quran/getSurah';
 import { SurahContent } from '@/components/Quran/SurahContent';
 import { Metadata } from 'next';
 import { getAvailableSuras } from '@/lib/translations/available-suras';
+import { getStaticSuraInfo } from '@/lib/data/static-sura-info';
+import { loadTabasaranTranslation } from '@/lib/translations/loader';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -43,10 +45,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     try {
-      const surah = await getSurah(surahId);
+      const staticInfo = getStaticSuraInfo(surahId);
+      const tabasaranTranslation = await loadTabasaranTranslation(surahId);
+      const suraName = tabasaranTranslation?.suraName || staticInfo?.name || `Сура ${surahId}`;
+      const ayahCount = staticInfo?.numberOfAyahs;
+
       return {
-        title: `Сура ${surah.number} - ${surah.name} | Коран на табасаранском`,
-        description: `Сура ${surah.number} "${surah.name}" с переводом на табасаранский язык. ${surah.numberOfAyahs} аятов.`,
+        title: `Сура ${surahId} - ${suraName} | Коран на табасаранском`,
+        description: ayahCount
+          ? `Сура ${surahId} "${suraName}" с переводом на табасаранский язык. ${ayahCount} аятов.`
+          : `Сура ${surahId} "${suraName}" с переводом на табасаранский язык.`,
       };
     } catch (error) {
       console.error(`generateMetadata: Failed to load sura ${surahId}:`, error);

@@ -1,5 +1,7 @@
 // Серверные функции для получения данных из API
 
+import { loadSuraFromCache, saveSuraToCache } from './quran-cache';
+
 const API_BASE_URL = 'https://api.alquran.cloud/v1';
 
 export interface APIResponse {
@@ -54,40 +56,57 @@ export async function getSuraFromAPI(
     throw new Error('Sura number must be between 1 and 114');
   }
 
+  const cached = loadSuraFromCache(number);
+  if (cached) {
+    console.log(`Using cached API data for sura ${number}`);
+    return cached;
+  }
+
   const editionsStr = editions.join(',');
   const url = `${API_BASE_URL}/surah/${number}/editions/${editionsStr}`;
-  
-  console.log(`Fetching from API: ${url}`);
 
-  // Добавляем задержку 500ms между запросами чтобы не превысить rate limit API
-  await new Promise(resolve => setTimeout(resolve, 500));
+  const maxAttempts = 4;
+  let lastError: unknown;
 
-  try {
-    const response = await fetch(url, {
-      next: { revalidate: 3600 }, // Кешируем на 1 час
-    });
-
-    console.log(`API response status for sura ${number}: ${response.status}`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API error for sura ${number}: Status ${response.status}, Body: ${errorText}`);
-      throw new Error(`API returned status ${response.status}: ${errorText}`);
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (attempt > 1) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    const data: APIResponse = await response.json();
-    console.log(`API success for sura ${number}: received ${data?.data?.length || 0} editions`);
-    
-    if (!data || !data.data || data.data.length === 0) {
-      console.error(`API returned empty data for sura ${number}`);
-      throw new Error(`API returned empty data for sura ${number}`);
+    try {
+      console.log(`Fetching from API (attempt ${attempt}/${maxAttempts}): ${url}`);
+
+      const response = await fetch(url, {
+        cache: "force-cache",
+      });
+
+      console.log(`API response status for sura ${number}: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API error for sura ${number}: Status ${response.status}, Body: ${errorText}`);
+        throw new Error(`API returned status ${response.status}: ${errorText}`);
+      }
+
+      const data: APIResponse = await response.json();
+      console.log(`API success for sura ${number}: received ${data?.data?.length || 0} editions`);
+
+      if (!data || !data.data || data.data.length === 0) {
+        console.error(`API returned empty data for sura ${number}`);
+        throw new Error(`API returned empty data for sura ${number}`);
+      }
+
+      saveSuraToCache(number, data);
+      return data;
+    } catch (error) {
+      lastError = error;
+      console.error(`Failed to fetch sura ${number} from API (attempt ${attempt}):`, error);
     }
-    
-    return data;
-  } catch (error) {
-    console.error(`Failed to fetch sura ${number} from API:`, error);
-    console.error('Error details:', error instanceof Error ? error.message : String(error));
-    throw error;
   }
+
+  console.error(`API error details:`, lastError instanceof Error ? lastError.message : String(lastError));
+  throw lastError;
 }
 
